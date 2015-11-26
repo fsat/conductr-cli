@@ -52,7 +52,7 @@ def load_v1(args):
     response = requests.post(url, files=files, timeout=LOAD_HTTP_TIMEOUT)
     validation.raise_for_status_inc_3xx(response)
 
-    if args.verbose:
+    if not args.quiet and args.verbose:
         validation.pretty_json(response.text)
 
     response_json = json.loads(response.text)
@@ -99,7 +99,8 @@ def load_v2(args):
         configuration_name, configuration_file, bundle_conf_overlay = (None, None, None)
         if args.configuration is not None:
             print('Retrieving configuration...')
-            configuration_name, configuration_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir, args.configuration)
+            configuration_name, configuration_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir,
+                                                                             args.configuration)
             bundle_conf_overlay = bundle_utils.zip_entry('bundle.conf', configuration_file)
 
         files = [('bundleConf', ('bundle.conf', bundle_conf))]

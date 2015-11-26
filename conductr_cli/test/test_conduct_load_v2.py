@@ -48,6 +48,7 @@ class TestConductLoadCommand(ConductLoadTestBase):
             'port': 9005,
             'api_version': '2',
             'verbose': False,
+            'quiet': False,
             'long_ids': False,
             'cli_parameters': '',
             'custom_settings': self.custom_settings,

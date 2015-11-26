@@ -95,6 +95,14 @@ def add_bundle_resolve_cache_dir(sub_parser):
                             dest='resolve_cache_dir')
 
 
+def add_quiet_flag(sub_parser):
+    sub_parser.add_argument('-q',
+                            help='Prints affected bundle id on screen if enabled',
+                            default=False,
+                            dest='quiet',
+                            action='store_true')
+
+
 def add_default_arguments(sub_parser):
     add_ip_and_port(sub_parser)
     add_verbose(sub_parser)
@@ -140,6 +148,7 @@ def build_parser():
                              help='The optional configuration for the bundle')
     add_default_arguments(load_parser)
     add_bundle_resolve_cache_dir(load_parser)
+    add_quiet_flag(load_parser)
     load_parser.set_defaults(func=conduct_load.load)
 
     # Sub-parser for `run` sub-command
