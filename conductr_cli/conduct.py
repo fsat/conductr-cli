@@ -106,6 +106,7 @@ def add_quiet_flag(sub_parser):
 def add_default_arguments(sub_parser):
     add_ip_and_port(sub_parser)
     add_verbose(sub_parser)
+    add_quiet_flag(sub_parser)
     add_long_ids(sub_parser)
     add_api_version(sub_parser)
     add_local_connection_flag(sub_parser)
@@ -148,7 +149,6 @@ def build_parser():
                              help='The optional configuration for the bundle')
     add_default_arguments(load_parser)
     add_bundle_resolve_cache_dir(load_parser)
-    add_quiet_flag(load_parser)
     load_parser.set_defaults(func=conduct_load.load)
 
     # Sub-parser for `run` sub-command

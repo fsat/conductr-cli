@@ -12,6 +12,15 @@ LOG_LEVEL_VERBOSE = int((LOG_LEVEL_DEBUG + LOG_LEVEL_INFO) / 2)
 LOG_LEVEL_QUIET = int((LOG_LEVEL_INFO + LOG_LEVEL_WARN) / 2)
 
 
+class ThresholdFilter(logging.Filter):
+    def __init__(self, threshold):
+        super().__init__()
+        self.threshold = threshold
+
+    def filter(self, record):
+        return record.levelno < self.threshold
+
+
 def verbose(self, message, *args, **kwargs):
     self.log(LOG_LEVEL_VERBOSE, message, *args, **kwargs)
 
@@ -34,6 +43,7 @@ def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
 
     output_handler = logging.StreamHandler(stream=output)
     output_handler.setFormatter(formatter)
+    output_handler.addFilter(ThresholdFilter(LOG_LEVEL_ERROR))
     logger.addHandler(output_handler)
 
     err_output_handler = logging.StreamHandler(stream=err_output)
