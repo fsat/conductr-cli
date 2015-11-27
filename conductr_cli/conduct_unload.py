@@ -14,7 +14,7 @@ def unload(args):
     validation.raise_for_status_inc_3xx(response)
 
     if args.verbose:
-        validation.pretty_json(response.text)
+        print(validation.pretty_json((response.text)))
 
     print('Bundle unload request sent.')
     print('Print ConductR info with: conduct info{}'.format(args.cli_parameters))

@@ -53,7 +53,7 @@ def load_v1(args):
     validation.raise_for_status_inc_3xx(response)
 
     if not args.quiet and args.verbose:
-        validation.pretty_json(response.text)
+        print(validation.pretty_json(response.text))
 
     response_json = json.loads(response.text)
     bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])
@@ -117,7 +117,7 @@ def load_v2(args):
         validation.raise_for_status_inc_3xx(response)
 
         if args.verbose:
-            validation.pretty_json(response.text)
+            print(validation.pretty_json(response.text))
 
         response_json = json.loads(response.text)
         bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])

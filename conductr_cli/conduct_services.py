@@ -15,7 +15,7 @@ def services(args):
     validation.raise_for_status_inc_3xx(response)
 
     if args.verbose:
-        validation.pretty_json(response.text)
+        print(validation.pretty_json((response.text)))
 
     data = sorted([
                   (
