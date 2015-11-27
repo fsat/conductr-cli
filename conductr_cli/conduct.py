@@ -3,7 +3,7 @@ import argparse
 from conductr_cli import \
     conduct_info, conduct_load, conduct_run, conduct_services,\
     conduct_stop, conduct_unload, conduct_version, conduct_logs,\
-    conduct_events, host
+    conduct_events, host, logging_setup
 from pyhocon import ConfigFactory
 import os
 import sys
@@ -265,6 +265,7 @@ def run():
 
         args.cli_parameters = get_cli_parameters(args)
         args.custom_settings = get_custom_settings(args)
+        logging_setup.configure_logging(args)
         args.func(args)
 
 

@@ -6,6 +6,7 @@ from conductr_cli import resolver
 from functools import partial
 
 import json
+import logging
 import requests
 
 
@@ -27,14 +28,16 @@ def load(args):
 
 
 def load_v1(args):
-    print('Retrieving bundle...')
+    log = logging.getLogger(__name__)
+
+    log.info('Retrieving bundle...')
     custom_settings = args.custom_settings
     resolve_cache_dir = args.resolve_cache_dir
     bundle_name, bundle_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir, args.bundle)
 
     configuration_name, configuration_file = (None, None)
     if args.configuration is not None:
-        print('Retrieving configuration...')
+        log.info('Retrieving configuration...')
         configuration_name, configuration_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir, args.configuration)
 
     bundle_conf = ConfigFactory.parse_string(bundle_utils.conf(bundle_file))
@@ -48,20 +51,19 @@ def load_v1(args):
     if configuration_file is not None:
         files.append(('configuration', (configuration_name, open(configuration_file, 'rb'))))
 
-    print('Loading bundle to ConductR...')
+    log.info('Loading bundle to ConductR...')
     response = requests.post(url, files=files, timeout=LOAD_HTTP_TIMEOUT)
     validation.raise_for_status_inc_3xx(response)
 
-    if not args.quiet and args.verbose:
-        print(validation.pretty_json(response.text))
+    log.verbose(validation.pretty_json(response.text))
 
     response_json = json.loads(response.text)
     bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])
 
-    print('Bundle loaded.')
-    print('Start bundle with: conduct run{} {}'.format(args.cli_parameters, bundle_id))
-    print('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
-    print('Print ConductR info with: conduct info{}'.format(args.cli_parameters))
+    log.info('Bundle loaded.')
+    log.info('Start bundle with: conduct run{} {}'.format(args.cli_parameters, bundle_id))
+    log.info('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
+    log.info('Print ConductR info with: conduct info{}'.format(args.cli_parameters))
 
 
 def apply_to_configurations(base_conf, overlay_conf, method, key):
@@ -87,7 +89,9 @@ def get_payload(bundle_name, bundle_file, bundle_configuration):
 
 
 def load_v2(args):
-    print('Retrieving bundle...')
+    log = logging.getLogger(__name__)
+
+    log.info('Retrieving bundle...')
     custom_settings = args.custom_settings
     resolve_cache_dir = args.resolve_cache_dir
     bundle_name, bundle_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir, args.bundle)
@@ -98,7 +102,7 @@ def load_v2(args):
     else:
         configuration_name, configuration_file, bundle_conf_overlay = (None, None, None)
         if args.configuration is not None:
-            print('Retrieving configuration...')
+            log.info('Retrieving configuration...')
             configuration_name, configuration_file = resolver.resolve_bundle(custom_settings, resolve_cache_dir,
                                                                              args.configuration)
             bundle_conf_overlay = bundle_utils.zip_entry('bundle.conf', configuration_file)
@@ -112,17 +116,16 @@ def load_v2(args):
 
         url = conduct_url.url('bundles', args)
 
-        print('Loading bundle to ConductR...')
+        log.info('Loading bundle to ConductR...')
         response = requests.post(url, files=files, timeout=LOAD_HTTP_TIMEOUT)
         validation.raise_for_status_inc_3xx(response)
 
-        if args.verbose:
-            print(validation.pretty_json(response.text))
+        log.verbose(validation.pretty_json(response.text))
 
         response_json = json.loads(response.text)
         bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])
 
-        print('Bundle loaded.')
-        print('Start bundle with: conduct run{} {}'.format(args.cli_parameters, bundle_id))
-        print('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
-        print('Print ConductR info with: conduct info{}'.format(args.cli_parameters))
+        log.info('Bundle loaded.')
+        log.info('Start bundle with: conduct run{} {}'.format(args.cli_parameters, bundle_id))
+        log.info('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
+        log.info('Print ConductR info with: conduct info{}'.format(args.cli_parameters))

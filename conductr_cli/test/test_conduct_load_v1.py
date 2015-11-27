@@ -1,7 +1,7 @@
 from conductr_cli.test.conduct_load_test_base import ConductLoadTestBase
 from conductr_cli.test.cli_test_case import create_temp_bundle, strip_margin, as_error, \
     create_temp_bundle_with_contents
-from conductr_cli import conduct_load
+from conductr_cli import conduct_load, logging_setup
 from conductr_cli.conduct_load import LOAD_HTTP_TIMEOUT
 import shutil
 
@@ -89,10 +89,10 @@ class TestConductLoadCommand(ConductLoadTestBase):
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
                 patch('requests.post', http_method), \
-                patch('sys.stdout', stdout), \
                 patch('builtins.open', open_mock):
             args = self.default_args.copy()
             args.update({'configuration': config_file})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         self.assertEqual(

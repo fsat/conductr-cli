@@ -1,5 +1,5 @@
 from conductr_cli.test.cli_test_case import CliTestCase, strip_margin, as_error
-from conductr_cli import conduct_load
+from conductr_cli import conduct_load, logging_setup
 from conductr_cli.conduct_load import LOAD_HTTP_TIMEOUT
 from conductr_cli.exceptions import BundleResolutionError
 
@@ -56,8 +56,8 @@ class ConductLoadTestBase(CliTestCase):
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
                 patch('requests.post', http_method), \
-                patch('sys.stdout', stdout), \
                 patch('builtins.open', open_mock):
+            logging_setup.configure_logging(MagicMock(**self.default_args), stdout)
             conduct_load.load(MagicMock(**self.default_args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -74,10 +74,10 @@ class ConductLoadTestBase(CliTestCase):
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
                 patch('requests.post', http_method), \
-                patch('sys.stdout', stdout), \
                 patch('builtins.open', open_mock):
             args = self.default_args.copy()
             args.update({'verbose': True})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -94,10 +94,10 @@ class ConductLoadTestBase(CliTestCase):
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
                 patch('requests.post', http_method), \
-                patch('sys.stdout', stdout), \
                 patch('builtins.open', open_mock):
             args = self.default_args.copy()
             args.update({'long_ids': True})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -115,10 +115,10 @@ class ConductLoadTestBase(CliTestCase):
         cli_parameters = ' --ip 127.0.1.1 --port 9006'
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
                 patch('requests.post', http_method), \
-                patch('sys.stdout', stdout), \
                 patch('builtins.open', open_mock):
             args = self.default_args.copy()
             args.update({'cli_parameters': cli_parameters})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -132,6 +132,7 @@ class ConductLoadTestBase(CliTestCase):
     def base_test_failure(self):
         resolve_bundle_mock = MagicMock(return_value=(self.bundle_name, self.bundle_file))
         http_method = self.respond_with(404)
+        stdout = MagicMock()
         stderr = MagicMock()
         open_mock = MagicMock(return_value=1)
 
@@ -139,6 +140,7 @@ class ConductLoadTestBase(CliTestCase):
                 patch('requests.post', http_method), \
                 patch('sys.stderr', stderr), \
                 patch('builtins.open', open_mock):
+            logging_setup.configure_logging(MagicMock(**self.default_args), stdout)
             conduct_load.load(MagicMock(**self.default_args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -153,6 +155,7 @@ class ConductLoadTestBase(CliTestCase):
     def base_test_failure_invalid_address(self):
         resolve_bundle_mock = MagicMock(return_value=(self.bundle_name, self.bundle_file))
         http_method = self.raise_connection_error('test reason', self.default_url)
+        stdout = MagicMock()
         stderr = MagicMock()
         open_mock = MagicMock(return_value=1)
 
@@ -160,6 +163,7 @@ class ConductLoadTestBase(CliTestCase):
                 patch('requests.post', http_method), \
                 patch('sys.stderr', stderr), \
                 patch('builtins.open', open_mock):
+            logging_setup.configure_logging(MagicMock(**self.default_args), stdout)
             conduct_load.load(MagicMock(**self.default_args))
 
         open_mock.assert_called_with(self.bundle_file, 'rb')
@@ -172,11 +176,13 @@ class ConductLoadTestBase(CliTestCase):
 
     def base_test_failure_no_bundle(self):
         resolve_bundle_mock = MagicMock(side_effect=BundleResolutionError('some message'))
+        stdout = MagicMock()
         stderr = MagicMock()
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), patch('sys.stderr', stderr):
             args = self.default_args.copy()
             args.update({'bundle': 'no_such.bundle'})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         resolve_bundle_mock.assert_called_with(self.custom_settings, self.bundle_resolve_cache_dir, 'no_such.bundle')
@@ -189,12 +195,13 @@ class ConductLoadTestBase(CliTestCase):
     def base_test_failure_no_configuration(self):
         resolve_bundle_mock = MagicMock(side_effect=[(self.bundle_name, self.bundle_file),
                                                      BundleResolutionError('some message')])
-
+        stdout = MagicMock()
         stderr = MagicMock()
 
         with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), patch('sys.stderr', stderr):
             args = self.default_args.copy()
             args.update({'configuration': 'no_such.conf'})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
             conduct_load.load(MagicMock(**args))
 
         self.assertEqual(

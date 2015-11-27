@@ -52,7 +52,7 @@ class CliTestCase(TestCase):
 
     @staticmethod
     def output(logger):
-        return ''.join([args[0] for name, args, kwargs in logger.method_calls])
+        return ''.join([args[0] for name, args, kwargs in logger.method_calls if len(args) > 0])
 
 
 def strip_margin(string, margin_char='|'):
