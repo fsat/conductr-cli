@@ -29,12 +29,38 @@ def quiet(self, message, *args, **kwargs):
     self.log(LOG_LEVEL_QUIET, message, *args, **kwargs)
 
 
+def is_verbose_enabled(self):
+    return self.isEnabledFor(LOG_LEVEL_VERBOSE)
+
+
+def is_debug_enabled(self):
+    return self.isEnabledFor(LOG_LEVEL_DEBUG)
+
+
+def is_info_enabled(self):
+    return self.isEnabledFor(LOG_LEVEL_INFO)
+
+
+def is_quiet_enabled(self):
+    return self.isEnabledFor(LOG_LEVEL_QUIET)
+
+
+def is_warn_enabled(self):
+    return self.isEnabledFor(LOG_LEVEL_WARN)
+
+
 def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
     logging.addLevelName(LOG_LEVEL_VERBOSE, 'VERBOSE')
     logging.Logger.verbose = verbose
 
     logging.addLevelName(LOG_LEVEL_QUIET, 'QUIET')
     logging.Logger.quiet = quiet
+
+    logging.Logger.is_verbose_enabled = is_verbose_enabled
+    logging.Logger.is_debug_enabled = is_debug_enabled
+    logging.Logger.is_info_enabled = is_info_enabled
+    logging.Logger.is_quiet_enabled = is_quiet_enabled
+    logging.Logger.is_warn_enabled = is_warn_enabled
 
     logger = logging.getLogger()
     logger.setLevel('ERROR')

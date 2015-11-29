@@ -55,7 +55,8 @@ def load_v1(args):
     response = requests.post(url, files=files, timeout=LOAD_HTTP_TIMEOUT)
     validation.raise_for_status_inc_3xx(response)
 
-    log.verbose(validation.pretty_json(response.text))
+    if log.is_verbose_enabled():
+        log.verbose(validation.pretty_json(response.text))
 
     response_json = json.loads(response.text)
     bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])
@@ -120,7 +121,8 @@ def load_v2(args):
         response = requests.post(url, files=files, timeout=LOAD_HTTP_TIMEOUT)
         validation.raise_for_status_inc_3xx(response)
 
-        log.verbose(validation.pretty_json(response.text))
+        if log.is_verbose_enabled():
+            log.verbose(validation.pretty_json(response.text))
 
         response_json = json.loads(response.text)
         bundle_id = response_json['bundleId'] if args.long_ids else bundle_utils.short_id(response_json['bundleId'])
