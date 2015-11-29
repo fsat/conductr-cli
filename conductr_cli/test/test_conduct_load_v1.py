@@ -70,6 +70,9 @@ class TestConductLoadCommand(ConductLoadTestBase):
     def test_success_verbose(self):
         self.base_test_success_verbose()
 
+    def test_success_quiet(self):
+        self.base_test_success_quiet()
+
     def test_success_long_ids(self):
         self.base_test_success_long_ids()
 

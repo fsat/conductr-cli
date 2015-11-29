@@ -86,6 +86,26 @@ class ConductLoadTestBase(CliTestCase):
 
         self.assertEqual(self.default_output(verbose=self.default_response), self.output(stdout))
 
+    def base_test_success_quiet(self):
+        resolve_bundle_mock = MagicMock(return_value=(self.bundle_name, self.bundle_file))
+        http_method = self.respond_with(200, self.default_response)
+        stdout = MagicMock()
+        open_mock = MagicMock(return_value=1)
+
+        with patch('conductr_cli.resolver.resolve_bundle', resolve_bundle_mock), \
+                patch('requests.post', http_method), \
+                patch('builtins.open', open_mock):
+            args = self.default_args.copy()
+            args.update({'quiet': True})
+            logging_setup.configure_logging(MagicMock(**args), stdout)
+            conduct_load.load(MagicMock(**args))
+
+        open_mock.assert_called_with(self.bundle_file, 'rb')
+        resolve_bundle_mock.assert_called_with(self.custom_settings, self.bundle_resolve_cache_dir, self.bundle_file)
+        http_method.assert_called_with(self.default_url, files=self.default_files, timeout=LOAD_HTTP_TIMEOUT)
+
+        self.assertEqual('45e0c477d3e5ea92aa8d85c0d8f3e25c\n', self.output(stdout))
+
     def base_test_success_long_ids(self):
         resolve_bundle_mock = MagicMock(return_value=(self.bundle_name, self.bundle_file))
         http_method = self.respond_with(200, self.default_response)

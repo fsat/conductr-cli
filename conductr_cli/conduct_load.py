@@ -66,6 +66,9 @@ def load_v1(args):
     log.info('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
     log.info('Print ConductR info with: conduct info{}'.format(args.cli_parameters))
 
+    if not log.is_info_enabled() and log.is_quiet_enabled():
+        log.quiet(response_json['bundleId'])
+
 
 def apply_to_configurations(base_conf, overlay_conf, method, key):
     if overlay_conf is None:
@@ -131,3 +134,6 @@ def load_v2(args):
         log.info('Start bundle with: conduct run{} {}'.format(args.cli_parameters, bundle_id))
         log.info('Unload bundle with: conduct unload{} {}'.format(args.cli_parameters, bundle_id))
         log.info('Print ConductR info with: conduct info{}'.format(args.cli_parameters))
+
+        if not log.is_info_enabled() and log.is_quiet_enabled():
+            log.quiet(response_json['bundleId'])

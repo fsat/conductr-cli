@@ -76,6 +76,12 @@ class TestConductLoadCommand(ConductLoadTestBase):
             self.base_test_success_verbose()
         zip_entry_mock.assert_called_with('bundle.conf', self.bundle_file)
 
+    def test_success_quiet(self):
+        zip_entry_mock = MagicMock(return_value='mock bundle.conf')
+        with patch('conductr_cli.bundle_utils.zip_entry', zip_entry_mock):
+            self.base_test_success_quiet()
+        zip_entry_mock.assert_called_with('bundle.conf', self.bundle_file)
+
     def test_success_long_ids(self):
         zip_entry_mock = MagicMock(return_value='mock bundle.conf')
         with patch('conductr_cli.bundle_utils.zip_entry', zip_entry_mock):
