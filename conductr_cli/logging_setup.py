@@ -67,6 +67,10 @@ def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
 
     formatter = logging.Formatter('%(message)s')
 
+    # Clear existing handlers to prevent duplicate log messages
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+
     output_handler = logging.StreamHandler(stream=output)
     output_handler.setFormatter(formatter)
     output_handler.addFilter(ThresholdFilter(LOG_LEVEL_ERROR))
