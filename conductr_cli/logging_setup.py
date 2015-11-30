@@ -6,10 +6,12 @@ LOG_LEVEL_DEBUG = logging.getLevelName('DEBUG')
 LOG_LEVEL_INFO = logging.getLevelName('INFO')
 LOG_LEVEL_WARN = logging.getLevelName('WARN')
 LOG_LEVEL_ERROR = logging.getLevelName('ERROR')
+LOG_LEVEL_CRITICAL = logging.getLevelName('CRITICAL')
 
 # Custom log level for ConductR CLI
 LOG_LEVEL_VERBOSE = int((LOG_LEVEL_DEBUG + LOG_LEVEL_INFO) / 2)
 LOG_LEVEL_QUIET = int((LOG_LEVEL_INFO + LOG_LEVEL_WARN) / 2)
+LOG_LEVEL_SCREEN = int(LOG_LEVEL_CRITICAL + 10)
 
 
 class ThresholdFilter(logging.Filter):
@@ -27,6 +29,10 @@ def verbose(self, message, *args, **kwargs):
 
 def quiet(self, message, *args, **kwargs):
     self.log(LOG_LEVEL_QUIET, message, *args, **kwargs)
+
+
+def screen(self, message, *args, **kwargs):
+    self.log(LOG_LEVEL_SCREEN, message, *args, **kwargs)
 
 
 def is_verbose_enabled(self):
@@ -56,6 +62,9 @@ def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
     logging.addLevelName(LOG_LEVEL_QUIET, 'QUIET')
     logging.Logger.quiet = quiet
 
+    logging.addLevelName(LOG_LEVEL_SCREEN, 'SCREEN')
+    logging.Logger.screen = screen
+
     logging.Logger.is_verbose_enabled = is_verbose_enabled
     logging.Logger.is_debug_enabled = is_debug_enabled
     logging.Logger.is_info_enabled = is_info_enabled
@@ -79,7 +88,13 @@ def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
     err_output_handler = logging.StreamHandler(stream=err_output)
     err_output_handler.setFormatter(formatter)
     err_output_handler.setLevel(LOG_LEVEL_ERROR)
+    err_output_handler.addFilter(ThresholdFilter(LOG_LEVEL_SCREEN))
     logger.addHandler(err_output_handler)
+
+    screen_output_handler = logging.StreamHandler(stream=output)
+    screen_output_handler.setFormatter(formatter)
+    screen_output_handler.setLevel(LOG_LEVEL_SCREEN)
+    logger.addHandler(screen_output_handler)
 
     conductr_log = logging.getLogger('conductr_cli')
     if args.verbose:
