@@ -7,9 +7,9 @@ from conductr_cli.shazar import create_digest, build_parser, run
 from conductr_cli.test.cli_test_case import CliTestCase
 
 try:
-    from unittest.mock import MagicMock  # 3.3 and beyond
+    from unittest.mock import patch, MagicMock  # 3.3 and beyond
 except ImportError:
-    from mock import MagicMock
+    from mock import patch, MagicMock
 
 
 class TestShazar(TestCase):
@@ -45,8 +45,13 @@ class TestIntegration(CliTestCase):
 
     def test(self):
         stdout = MagicMock()
+
         logging_setup.configure_logging(MagicMock(), stdout)
-        run('--output-dir {} {}'.format(self.tmpdir, self.tmpfile.name).split())
+
+        # Patch configure logging to preserve the output to mock stdout
+        configure_logging_mock = MagicMock()
+        with patch('conductr_cli.logging_setup.configure_logging', configure_logging_mock):
+            run('--output-dir {} {}'.format(self.tmpdir, self.tmpfile.name).split())
 
         self.assertRegex(
             self.output(stdout),

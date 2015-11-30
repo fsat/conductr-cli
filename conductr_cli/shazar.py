@@ -1,6 +1,7 @@
 import argcomplete
 import argparse
 from functools import partial
+from conductr_cli import logging_setup
 import hashlib
 import logging
 import os
@@ -13,6 +14,7 @@ def run(argv=None):
     parser = build_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
+    logging_setup.configure_logging(args)
     args.func(args)
 
 
