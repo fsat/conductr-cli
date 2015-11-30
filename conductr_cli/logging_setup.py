@@ -97,9 +97,9 @@ def configure_logging(args, output=sys.stdout, err_output=sys.stderr):
     logger.addHandler(screen_output_handler)
 
     conductr_log = logging.getLogger('conductr_cli')
-    if args.verbose:
+    if vars(args).get('verbose'):
         conductr_log.setLevel('VERBOSE')
-    elif args.quiet:
+    elif vars(args).get('quiet'):
         conductr_log.setLevel('QUIET')
     else:
         conductr_log.setLevel('INFO')
