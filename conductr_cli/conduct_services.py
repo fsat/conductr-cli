@@ -30,9 +30,17 @@ def services(args):
                 return 'Running'
         return 'Starting'
 
+    def get_service_name_from_service_url(service_url):
+        paths = urlparse(service_url).path.split('/')
+        if len(paths) > 1:
+            return paths[1]
+        else:
+            return ''
+
     data = sorted([
                   (
                       {
+                          'service_name': get_service_name_from_service_url(service),
                           'service': service,
                           'bundle_id': bundle['bundleId'] if args.long_ids else bundle_utils.short_id(
                               bundle['bundleId']),
@@ -56,12 +64,14 @@ def services(args):
     duplicate_endpoints = [service for (service, endpoint) in service_endpoints.items() if len(endpoint) > 1] \
         if len(service_endpoints) > 0 else []
 
-    data.insert(0, {'service': 'SERVICE', 'bundle_id': 'BUNDLE ID', 'bundle_name': 'BUNDLE NAME', 'status': 'STATUS'})
+    data.insert(0, {'service_name': 'SERVICE NAME', 'service': 'SERVICE', 'bundle_id': 'BUNDLE ID',
+                    'bundle_name': 'BUNDLE NAME', 'status': 'STATUS'})
 
     padding = 2
     column_widths = dict(screen_utils.calc_column_widths(data), **{'padding': ' ' * padding})
     for row in data:
         log.screen(
+            '{service_name: <{service_name_width}}{padding}'
             '{service: <{service_width}}{padding}'
             '{bundle_id: <{bundle_id_width}}{padding}'
             '{bundle_name: <{bundle_name_width}}{padding}'
