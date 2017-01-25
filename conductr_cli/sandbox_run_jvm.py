@@ -108,9 +108,17 @@ def log_run_attempt(args, run_result, is_started, wait_timeout):
             plural_agents = 's' if nr_instance_agent > 1 else ''
             log.info('  agent: {} instance{}'.format(nr_instance_agent, plural_agents))
 
+            log.info('')
+
             log.info('Check current bundle status with:')
             log.info('  conduct info')
             conduct_main.run(['info', '--host', run_result.host], configure_logging=False)
+
+            log.info('')
+
+            log.info('List deployed services with:')
+            log.info('  conduct service-names')
+            conduct_main.run(['service-names', '--host', run_result.host], configure_logging=False)
         else:
             log.info(headline('Summary'))
             log.error('ConductR has not been started within {} seconds.'.format(wait_timeout))

@@ -60,6 +60,8 @@ class TestConductServiceNamesCommand(CliTestCase):
                                     |
                                     |Warning: Multiple endpoints found for the following services: /comp2-endp2
                                     |Warning: Service resolution for these services is undefined.
+                                    |
+                                    |Use SERVICE LOCATOR URL to access each service
                                     |""")),
             self.output(stdout))
 
@@ -83,6 +85,8 @@ class TestConductServiceNamesCommand(CliTestCase):
                             |comp2-endp1   6e4560e    multi2-comp-multi-endp-1.0.0  Running  http://127.0.0.1:9008/services/comp2-endp1
                             |comp3-endp1   6e4560e    multi2-comp-multi-endp-1.0.0  Running  http://127.0.0.1:9008/services/comp3-endp1
                             |comp3-endp2   6e4560e    multi2-comp-multi-endp-1.0.0  Running  http://127.0.0.1:9008/services/comp3-endp2
+                            |
+                            |Use SERVICE LOCATOR URL to access each service
                             |"""),
             self.output(stdout))
 
@@ -104,6 +108,8 @@ class TestConductServiceNamesCommand(CliTestCase):
                             |comp1-endp2   f804d64    multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp1-endp2
                             |comp2-endp1   f804d64    multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp2-endp1
                             |comp2-endp2   f804d64    multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp2-endp2
+                            |
+                            |Use SERVICE LOCATOR URL to access each service
                             |"""),
             self.output(stdout))
 
@@ -128,6 +134,8 @@ class TestConductServiceNamesCommand(CliTestCase):
                    |comp1-endp2   f804d644a01a5ab9f679f76939f5c7e2  multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp1-endp2
                    |comp2-endp1   f804d644a01a5ab9f679f76939f5c7e2  multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp2-endp1
                    |comp2-endp2   f804d644a01a5ab9f679f76939f5c7e2  multi-comp-multi-endp-1.0.0  Starting  http://127.0.0.1:9008/services/comp2-endp2
+                   |
+                   |Use SERVICE LOCATOR URL to access each service
                    |"""),
             self.output(stdout))
 
@@ -165,6 +173,8 @@ class TestConductServiceNamesCommand(CliTestCase):
             strip_margin(
                 """|SERVICE NAME  BUNDLE ID  BUNDLE NAME                  STATUS   SERVICE LOCATOR URL
                    |comp1-endp1   f804d64    multi-comp-multi-endp-1.0.0  Running  http://127.0.0.1:9008/services/comp1-endp1
+                   |
+                   |Use SERVICE LOCATOR URL to access each service
                    |"""),
             self.output(stdout))
 
@@ -186,6 +196,8 @@ class TestConductServiceNamesCommand(CliTestCase):
                    |my-endp1      f804d64    bundle-with-acl-1.0.0       Running   http://127.0.0.1:9008/services/my-endp1
                    |my-svc1       ga04d64    bundle-with-services-1.0.0  Starting  http://127.0.0.1:9008/services/my-svc1
                    |my-svc2       ga04d64    bundle-with-services-1.0.0  Starting  http://127.0.0.1:9008/services/my-svc2
+                   |
+                   |Use SERVICE LOCATOR URL to access each service
                    |"""),
             self.output(stdout))
 

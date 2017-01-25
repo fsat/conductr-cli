@@ -723,7 +723,10 @@ class TestLogRunAttempt(CliTestCase):
                 wait_timeout=self.wait_timeout
             )
 
-        run_mock.assert_called_with(['info', '--host', '192.168.1.1'], configure_logging=False)
+        run_mock.assert_has_calls([
+            call(['info', '--host', '192.168.1.1'], configure_logging=False),
+            call(['service-names', '--host', '192.168.1.1'], configure_logging=False)
+        ])
 
         expected_stdout = strip_margin("""||------------------------------------------------|
                                           || Summary                                        |
@@ -731,8 +734,12 @@ class TestLogRunAttempt(CliTestCase):
                                           |ConductR has been started:
                                           |  core: 3 instances
                                           |  agent: 3 instances
+                                          |
                                           |Check current bundle status with:
                                           |  conduct info
+                                          |
+                                          |List deployed services with:
+                                          |  conduct service-names
                                           |""")
         self.assertEqual(expected_stdout, self.output(stdout))
 
@@ -765,8 +772,12 @@ class TestLogRunAttempt(CliTestCase):
                                           |ConductR has been started:
                                           |  core: 1 instance
                                           |  agent: 1 instance
+                                          |
                                           |Check current bundle status with:
                                           |  conduct info
+                                          |
+                                          |List deployed services with:
+                                          |  conduct service-names
                                           |""")
         self.assertEqual(expected_stdout, self.output(stdout))
 

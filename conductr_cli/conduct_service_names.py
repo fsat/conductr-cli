@@ -103,4 +103,8 @@ def service_names(args):
         log.warning('Multiple endpoints found for the following services: {}'.format(', '.join(duplicate_endpoints)))
         log.warning('Service resolution for these services is undefined.')
 
+    if len(data) > 1:
+        log.screen('')
+        log.screen('Use SERVICE LOCATOR URL to access each service')
+
     return True
