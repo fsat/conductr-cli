@@ -1,7 +1,9 @@
 from conductr_cli import bundle_utils, conduct_request, conduct_url, license, validation, screen_utils
 from conductr_cli.conduct_url import conductr_host
 from conductr_cli.license import UNLICENSED_DISPLAY_TEXT
+from urllib.parse import urlparse
 import json
+import os
 import logging
 from conductr_cli.http import DEFAULT_HTTP_TIMEOUT
 
@@ -134,11 +136,11 @@ def display_bundle_attributes(args, bundle):
         ('Compatibility Version', bundle['attributes']['compatibilityVersion']),
         ('Nr of CPUs', bundle['attributes']['nrOfCpus']),
         ('Memory', bundle['attributes']['memory']),
-        ('Disk space', bundle['attributes']['diskSpace']),
+        ('Disk Space', bundle['attributes']['diskSpace']),
         ('Roles', ', '.join(sorted(bundle['attributes']['roles']))),
         ('Bundle Digest', bundle['bundleDigest']),
         ('Configuration Digest', bundle['configurationDigest'] if 'configurationDigest' in bundle else None),
-        ('Has Error', 'Yes' if bundle['hasError'] else 'No'),
+        ('Error', 'Yes' if bundle['hasError'] else 'No'),
     ])
 
 
@@ -147,7 +149,47 @@ def display_bundle_config(bundle):
 
 
 def display_bundle_installations(bundle):
-    pass
+    def host_from_akka_address(akka_address):
+        return akka_address.split('@')[1].split(':')[0]
+
+    def basedir(file_url):
+        full_path = urlparse(file_url, scheme='file').path
+        return os.path.dirname(full_path)
+
+    def filename(file_url):
+        full_path = urlparse(file_url, scheme='file').path
+        return os.path.basename(full_path)
+
+    log = logging.getLogger(__name__)
+
+    display_title_table('BUNDLE INSTALLATIONS')
+
+    rows = [
+        {
+            'host': host_from_akka_address(bundle_installation['uniqueAddress']['address']),
+            'storage_dir': basedir(bundle_installation['bundleFile']),
+            'bundle_file': filename(bundle_installation['bundleFile']),
+            'config_file': filename(bundle_installation['configurationFile'])
+            if 'configurationFile' in bundle_installation else '',
+        }
+        for bundle_installation in bundle['bundleInstallations']
+        ]
+
+    rows.insert(0, {
+        'host': 'HOST',
+        'storage_dir': 'DIR',
+        'bundle_file': 'BUNDLE',
+        'config_file': 'CONFIG',
+    })
+    column_widths = dict(screen_utils.calc_column_widths(rows), **{'padding': ' ' * DISPLAY_PADDING})
+    for row in rows:
+        log.screen('''\
+{host: <{host_width}}{padding}\
+{storage_dir: <{storage_dir_width}}{padding}\
+{bundle_file: <{bundle_file_width}}{padding}\
+{config_file: <{config_file_width}}'''.format(**dict(row, **column_widths)).rstrip())
+
+    log.screen('')
 
 
 def display_bundle_executions(bundle):
