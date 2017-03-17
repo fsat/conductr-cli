@@ -31,7 +31,8 @@ def info(args):
 
 def display_bundle(args, bundles, bundle_id_or_name):
     bundles = filter_bundles_by_id_or_name(bundles, bundle_id_or_name)
-    print(bundles)
+    for bundle in bundles:
+        display_bundle_properties(args, bundle)
 
 
 def display_all(args, bundles):
@@ -102,6 +103,72 @@ def display_bundle_id(args, bundle):
     bundle_id = bundle['bundleId'] if args.long_ids else bundle_utils.short_id(bundle['bundleId'])
     has_error_display = '! ' if bundle.get('hasError', False) else ''
     return '{}{}'.format(has_error_display, bundle_id)
+
+
+def display_bundle_properties(args, bundle):
+    display_bundle_attributes(args, bundle)
+    display_bundle_config(bundle)
+    display_bundle_installations(bundle)
+    display_bundle_executions(bundle)
+    display_bundle_scale(bundle)
+    import json
+    print(json.dumps(bundle, sort_keys=True, indent=2, separators=(',', ': ')))
+
+
+def display_bundle_attributes(args, bundle):
+    display_key_value_table('BUNDLE ATTRIBUTES', [
+        ('Bundle Id', display_bundle_id(args, bundle)),
+        ('Bundle Name', bundle['attributes']['bundleName']),
+        ('System', bundle['attributes']['system']),
+        ('System Version', bundle['attributes']['systemVersion']),
+        ('Compatibility Version', bundle['attributes']['compatibilityVersion']),
+        ('Nr of CPUs', bundle['attributes']['nrOfCpus']),
+        ('Memory', bundle['attributes']['memory']),
+        ('Disk space', bundle['attributes']['diskSpace']),
+        ('Roles', ', '.join(sorted(bundle['attributes']['roles']))),
+        ('Bundle Digest', bundle['bundleDigest']),
+        ('Configuration Digest', bundle['configurationDigest'] if 'configurationDigest' in bundle else None),
+        ('Has Error', 'Yes' if bundle['hasError'] else 'No'),
+    ])
+
+
+def display_bundle_config(bundle):
+    display_key_value_table('BUNDLE CONFIG', [
+        ('Bundle Id', 'TODO'),
+    ])
+
+
+def display_bundle_installations(bundle):
+    pass
+
+
+def display_bundle_executions(bundle):
+    pass
+
+
+def display_bundle_scale(bundle):
+    display_key_value_table('BUNDLE SCALE', [
+        ('Nr of Reschedules', bundle['bundleScale']['nrOfReschedules']),
+        ('Scale', bundle['bundleScale']['scale']),
+    ])
+
+
+def display_key_value_table(title, entries):
+    log = logging.getLogger(__name__)
+    log.screen(title)
+    title_separator = ''.join(['-' for x in title])
+    log.screen(title_separator)
+
+    rows = [{'key': key, 'value': value} for key, value in entries if value is not None]
+
+    padding = 2
+    column_widths = dict(screen_utils.calc_column_widths(rows), **{'padding': ' ' * padding})
+    for row in rows:
+        log.screen('''\
+{key: <{key_width}}{padding}\
+{value: <{value_width}}'''.format(**dict(row, **column_widths)).rstrip())
+
+    log.screen('')
 
 
 def filter_bundles_by_id_or_name(bundles, bundle_id_or_name):
