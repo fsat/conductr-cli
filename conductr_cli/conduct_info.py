@@ -25,17 +25,23 @@ def info(args):
 
     bundles = json.loads(response.text)
     if args.bundle:
-        display_bundle(args, bundles, args.bundle)
+        return display_bundle(args, bundles, args.bundle)
     else:
-        display_all(args, bundles)
-
-    return True
+        return display_all(args, bundles)
 
 
 def display_bundle(args, bundles, bundle_id_or_name):
+    log = logging.getLogger(__name__)
+
     bundles = filter_bundles_by_id_or_name(bundles, bundle_id_or_name)
-    for bundle in bundles:
-        display_bundle_properties(args, bundle)
+    if bundles:
+        for bundle in bundles:
+            display_bundle_properties(args, bundle)
+
+        return True
+    else:
+        log.error('Unable to find bundle {}'.format(bundle_id_or_name))
+        return False
 
 
 def display_all(args, bundles):
@@ -44,6 +50,8 @@ def display_all(args, bundles):
     else:
         is_license_success, conductr_license = license.get_license(args)
         display_all_default(args, is_license_success, conductr_license, bundles)
+
+    return True
 
 
 def display_all_default(args, is_license_success, conductr_license, bundles):
