@@ -6,6 +6,9 @@ import logging
 from conductr_cli.http import DEFAULT_HTTP_TIMEOUT
 
 
+DISPLAY_PADDING = 2
+
+
 @validation.handle_connection_error
 @validation.handle_http_error
 def info(args):
@@ -74,8 +77,7 @@ def display_all_default(args, is_license_success, conductr_license, bundles):
         'executions': '#RUN'
     })
 
-    padding = 2
-    column_widths = dict(screen_utils.calc_column_widths(data), **{'padding': ' ' * padding})
+    column_widths = dict(screen_utils.calc_column_widths(data), **{'padding': ' ' * DISPLAY_PADDING})
     has_error = False
     for row in data:
         has_error |= '!' in row['id']
@@ -107,10 +109,10 @@ def display_bundle_id(args, bundle):
 
 def display_bundle_properties(args, bundle):
     display_bundle_attributes(args, bundle)
+    display_bundle_scale(bundle)
     display_bundle_config(bundle)
     display_bundle_installations(bundle)
     display_bundle_executions(bundle)
-    display_bundle_scale(bundle)
     import json
     print(json.dumps(bundle, sort_keys=True, indent=2, separators=(',', ': ')))
 
@@ -133,9 +135,7 @@ def display_bundle_attributes(args, bundle):
 
 
 def display_bundle_config(bundle):
-    display_key_value_table('BUNDLE CONFIG', [
-        ('Bundle Id', 'TODO'),
-    ])
+    pass
 
 
 def display_bundle_installations(bundle):
@@ -143,7 +143,39 @@ def display_bundle_installations(bundle):
 
 
 def display_bundle_executions(bundle):
-    pass
+    log = logging.getLogger(__name__)
+
+    display_title_table('BUNDLE EXECUTIONS')
+
+    rows = [
+        {
+            'endpoint': endpoint_name,
+            'host': bundle_execution['host'],
+            'is_started': 'Yes' if bundle_execution['isStarted'] else 'No',
+            'bind_port': endpoint_details['bindPort'],
+            'host_port': endpoint_details['hostPort']
+        }
+        for bundle_execution in bundle['bundleExecutions']
+        for endpoint_name, endpoint_details in bundle_execution['endpoints'].items()
+    ]
+
+    rows.insert(0, {
+        'endpoint': 'ENDPOINT',
+        'host': 'HOST',
+        'is_started': 'STARTED',
+        'bind_port': 'BIND_PORT',
+        'host_port': 'HOST_PORT',
+    })
+    column_widths = dict(screen_utils.calc_column_widths(rows), **{'padding': ' ' * DISPLAY_PADDING})
+    for row in rows:
+        log.screen('''\
+{endpoint: <{endpoint_width}}{padding}\
+{host: <{host_width}}{padding}\
+{is_started: >{is_started_width}}{padding}\
+{bind_port: >{bind_port_width}}{padding}\
+{host_port: >{host_port_width}}'''.format(**dict(row, **column_widths)).rstrip())
+
+    log.screen('')
 
 
 def display_bundle_scale(bundle):
@@ -155,20 +187,24 @@ def display_bundle_scale(bundle):
 
 def display_key_value_table(title, entries):
     log = logging.getLogger(__name__)
-    log.screen(title)
-    title_separator = ''.join(['-' for x in title])
-    log.screen(title_separator)
+    display_title_table(title)
 
     rows = [{'key': key, 'value': value} for key, value in entries if value is not None]
 
-    padding = 2
-    column_widths = dict(screen_utils.calc_column_widths(rows), **{'padding': ' ' * padding})
+    column_widths = dict(screen_utils.calc_column_widths(rows), **{'padding': ' ' * DISPLAY_PADDING})
     for row in rows:
         log.screen('''\
 {key: <{key_width}}{padding}\
 {value: <{value_width}}'''.format(**dict(row, **column_widths)).rstrip())
 
     log.screen('')
+
+
+def display_title_table(title):
+    log = logging.getLogger(__name__)
+    log.screen(title)
+    title_separator = ''.join(['-' for x in title])
+    log.screen(title_separator)
 
 
 def filter_bundles_by_id_or_name(bundles, bundle_id_or_name):
