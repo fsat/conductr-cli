@@ -89,7 +89,8 @@ class TestSandboxRunCommand(CliTestCase):
         mock_collect_features = MagicMock(return_value=features)
 
         sandbox_run_result = sandbox_run_jvm.SandboxRunResult([1001], ['192.168.1.1'], [1002], ['192.168.1.1'],
-                                                              wait_for_conductr=True)
+                                                              wait_for_conductr=True,
+                                                              max_agents_exceeded_error=None)
         mock_sandbox_run_jvm = MagicMock(return_value=sandbox_run_result)
         mock_wait_for_conductr = MagicMock(return_value=True)
         mock_log_run_attempt = MagicMock()

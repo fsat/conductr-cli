@@ -4,7 +4,7 @@ from conductr_cli.constants import DEFAULT_SCHEME, DEFAULT_PORT, DEFAULT_BASE_PA
 from conductr_cli.exceptions import BindAddressNotFound, BintrayUnreachableError, InstanceCountError, \
     SandboxImageNotFoundError, SandboxImageNotAvailableOfflineError, SandboxUnsupportedOsArchError, \
     SandboxUnsupportedOsError, JavaCallError, JavaUnsupportedVendorError, JavaUnsupportedVersionError, \
-    JavaVersionParseError, HostnameLookupError, LicenseValidationError
+    JavaVersionParseError, HostnameLookupError, LicenseValidationError, LicenseMaxAgentExceededError
 from conductr_cli.resolvers import bintray_resolver
 from conductr_cli.resolvers.bintray_resolver import BINTRAY_LIGHTBEND_ORG, BINTRAY_CONDUCTR_REPO
 from conductr_cli.sandbox_common import flatten
@@ -30,7 +30,7 @@ SUPPORTED_JVM_VERSION = (1, 8)  # Supports JVM version 1.8 and above.
 
 
 class SandboxRunResult:
-    def __init__(self, core_pids, core_addrs, agent_pids, agent_addrs, wait_for_conductr):
+    def __init__(self, core_pids, core_addrs, agent_pids, agent_addrs, wait_for_conductr, max_agents_exceeded_error):
         self.core_pids = core_pids
         self.core_addrs = core_addrs
         self.agent_pids = agent_pids
@@ -38,6 +38,7 @@ class SandboxRunResult:
         self.host = str(core_addrs[0])
         self.wait_for_conductr = wait_for_conductr
         self.conductr_log_file = '{}/core/logs/conductr.log'.format(DEFAULT_SANDBOX_IMAGE_DIR)
+        self.max_agents_exceeded_error = max_agents_exceeded_error
 
     scheme = DEFAULT_SCHEME
     port = DEFAULT_PORT
@@ -104,11 +105,15 @@ def run(args, features):
 
     sandbox_common.wait_for_start(WaitForConductrArgs(core_addrs[0]))
 
+    max_agents_exceeded_error = None
     try:
         license_validation.validate_license(args.image_version,
                                             core_addrs[0],
                                             nr_of_agent_instances,
                                             DEFAULT_LICENSE_FILE)
+    except LicenseMaxAgentExceededError as e:
+        max_agents_exceeded_error = e
+
     except LicenseValidationError as e:
         sandbox_stop.stop(args)
         raise e
@@ -125,7 +130,8 @@ def run(args, features):
                                        args.conductr_roles,
                                        features,
                                        args.log_level)
-    return SandboxRunResult(core_pids, core_addrs, agent_pids, agent_addrs, wait_for_conductr=False)
+    return SandboxRunResult(core_pids, core_addrs, agent_pids, agent_addrs,
+                            wait_for_conductr=False, max_agents_exceeded_error=max_agents_exceeded_error)
 
 
 def log_run_attempt(args, run_result, feature_results, feature_provided):
@@ -175,6 +181,10 @@ def log_run_attempt(args, run_result, feature_results, feature_provided):
     log.info('  conduct info')
     log.info('Current bundle status:')
     conduct_main.run(['info', '--host', run_result.host], configure_logging=False)
+
+    if run_result.max_agents_exceeded_error:
+        for message in run_result.max_agents_exceeded_error.messages:
+            log.warning(message)
 
 
 def instance_count(image_version, instance_expression):

@@ -1,10 +1,11 @@
-from conductr_cli.test.cli_test_case import CliTestCase, strip_margin
+from conductr_cli.test.cli_test_case import CliTestCase, strip_margin, as_warn
 from conductr_cli import logging_setup, sandbox_run_jvm, sandbox_features
 from conductr_cli.constants import DEFAULT_LICENSE_FILE, FEATURE_PROVIDE_PROXYING
 from conductr_cli.exceptions import BindAddressNotFound, InstanceCountError, BintrayUnreachableError, \
     SandboxImageNotFoundError, SandboxImageNotAvailableOfflineError, SandboxUnsupportedOsError, \
     SandboxUnsupportedOsArchError, JavaCallError, JavaUnsupportedVendorError, JavaUnsupportedVersionError, \
-    JavaVersionParseError, LicenseValidationError, HostnameLookupError, BintrayCredentialsNotFoundError
+    JavaVersionParseError, LicenseValidationError, HostnameLookupError, BintrayCredentialsNotFoundError, \
+    LicenseMaxAgentExceededError
 from conductr_cli.sandbox_features import LoggingFeature
 from conductr_cli.sandbox_run_jvm import BIND_TEST_PORT
 from unittest.mock import call, patch, MagicMock
@@ -79,7 +80,8 @@ class TestRun(CliTestCase):
             result = sandbox_run_jvm.run(input_args, features)
             expected_result = sandbox_run_jvm.SandboxRunResult(mock_core_pids, bind_addrs,
                                                                mock_agent_pids, bind_addrs,
-                                                               wait_for_conductr=False)
+                                                               wait_for_conductr=False,
+                                                               max_agents_exceeded_error=None)
             self.assertEqual(expected_result, result)
 
         mock_sandbox_stop.assert_called_once_with(input_args)
@@ -165,7 +167,8 @@ class TestRun(CliTestCase):
             result = sandbox_run_jvm.run(input_args, features)
             expected_result = sandbox_run_jvm.SandboxRunResult(mock_core_pids, [bind_addr1],
                                                                mock_agent_pids, [bind_addr1, bind_addr2, bind_addr3],
-                                                               wait_for_conductr=False)
+                                                               wait_for_conductr=False,
+                                                               max_agents_exceeded_error=None)
             self.assertEqual(expected_result, result)
 
         mock_sandbox_stop.assert_called_once_with(input_args)
@@ -262,7 +265,8 @@ class TestRun(CliTestCase):
             result = sandbox_run_jvm.run(input_args, features)
             expected_result = sandbox_run_jvm.SandboxRunResult(mock_core_pids, [bind_addr1],
                                                                mock_agent_pids, [bind_addr1],
-                                                               wait_for_conductr=False)
+                                                               wait_for_conductr=False,
+                                                               max_agents_exceeded_error=None)
             self.assertEqual(expected_result, result)
 
         mock_sandbox_stop.assert_called_once_with(input_args)
@@ -346,7 +350,8 @@ class TestRun(CliTestCase):
             result = sandbox_run_jvm.run(input_args, features)
             expected_result = sandbox_run_jvm.SandboxRunResult(mock_core_pids, bind_addrs,
                                                                mock_agent_pids, bind_addrs,
-                                                               wait_for_conductr=False)
+                                                               wait_for_conductr=False,
+                                                               max_agents_exceeded_error=None)
             self.assertEqual(expected_result, result)
 
         mock_sandbox_stop.assert_called_once_with(input_args)
@@ -448,6 +453,88 @@ class TestRun(CliTestCase):
             call(input_args),
             call(input_args)
         ], mock_sandbox_stop.call_args_list)
+
+    def test_max_nr_agents_exceeded(self):
+        mock_validate_jvm_support = MagicMock()
+        mock_validate_hostname_lookup = MagicMock()
+        mock_validate_64bit_support = MagicMock()
+        mock_validate_bintray_credentials = MagicMock()
+        mock_cleanup_tmp_dir = MagicMock()
+
+        bind_addr = MagicMock()
+        bind_addrs = [bind_addr]
+        mock_find_bind_addrs = MagicMock(return_value=bind_addrs)
+
+        mock_core_extracted_dir = MagicMock()
+        mock_agent_extracted_dir = MagicMock()
+        mock_obtain_sandbox_image = MagicMock(return_value=(mock_core_extracted_dir, mock_agent_extracted_dir))
+
+        mock_sandbox_stop = MagicMock()
+
+        mock_core_pids = MagicMock()
+        mock_start_core_instances = MagicMock(return_value=mock_core_pids)
+
+        mock_wait_for_start = MagicMock()
+
+        error = LicenseMaxAgentExceededError(['test'])
+        mock_validate_license = MagicMock(side_effect=error)
+
+        mock_agent_pids = MagicMock()
+        mock_start_agent_instances = MagicMock(return_value=mock_agent_pids)
+
+        input_args = MagicMock(**self.default_args)
+        features = []
+
+        with patch('conductr_cli.sandbox_run_jvm.validate_jvm_support', mock_validate_jvm_support), \
+                patch('conductr_cli.sandbox_run_jvm.validate_hostname_lookup', mock_validate_hostname_lookup), \
+                patch('conductr_cli.sandbox_run_jvm.validate_64bit_support', mock_validate_64bit_support), \
+                patch('conductr_cli.sandbox_run_jvm.validate_bintray_credentials', mock_validate_bintray_credentials), \
+                patch('conductr_cli.sandbox_run_jvm.cleanup_tmp_dir', mock_cleanup_tmp_dir), \
+                patch('conductr_cli.sandbox_run_jvm.find_bind_addrs', mock_find_bind_addrs), \
+                patch('conductr_cli.sandbox_run_jvm.obtain_sandbox_image', mock_obtain_sandbox_image), \
+                patch('conductr_cli.sandbox_stop.stop', mock_sandbox_stop), \
+                patch('conductr_cli.sandbox_run_jvm.start_core_instances', mock_start_core_instances), \
+                patch('conductr_cli.sandbox_common.wait_for_start', mock_wait_for_start), \
+                patch('conductr_cli.license_validation.validate_license', mock_validate_license), \
+                patch('conductr_cli.sandbox_run_jvm.start_agent_instances', mock_start_agent_instances):
+            result = sandbox_run_jvm.run(input_args, features)
+            expected_result = sandbox_run_jvm.SandboxRunResult(mock_core_pids, bind_addrs,
+                                                               mock_agent_pids, bind_addrs,
+                                                               wait_for_conductr=False,
+                                                               max_agents_exceeded_error=error)
+            self.assertEqual(expected_result, result)
+
+        mock_sandbox_stop.assert_called_once_with(input_args)
+        mock_validate_jvm_support.assert_called_once_with()
+        mock_validate_hostname_lookup.assert_called_once_with()
+        mock_validate_64bit_support.assert_called_once_with()
+        mock_validate_bintray_credentials.assert_called_once_with('2.0.0', False)
+        mock_cleanup_tmp_dir.assert_called_once_with(self.tmp_dir)
+        mock_find_bind_addrs.assert_called_with(1, self.addr_range)
+        mock_start_core_instances.assert_called_with(mock_core_extracted_dir,
+                                                     self.tmp_dir,
+                                                     [],
+                                                     [],
+                                                     [],
+                                                     [],
+                                                     bind_addrs,
+                                                     [],
+                                                     features,
+                                                     'info')
+        expected_args = sandbox_run_jvm.WaitForConductrArgs(bind_addr)
+        mock_wait_for_start.assert_called_once_with(expected_args)
+        mock_validate_license.assert_called_once_with('2.0.0', bind_addr, 1, DEFAULT_LICENSE_FILE)
+        mock_start_agent_instances.assert_called_with(mock_agent_extracted_dir,
+                                                      self.tmp_dir,
+                                                      [],
+                                                      [],
+                                                      [],
+                                                      [],
+                                                      bind_addrs,
+                                                      bind_addrs,
+                                                      [],
+                                                      features,
+                                                      'info')
 
 
 class TestInstanceCount(CliTestCase):
@@ -1309,7 +1396,8 @@ class TestLogRunAttempt(CliTestCase):
         [ipaddress.ip_address('192.168.1.1'), ipaddress.ip_address('192.168.1.2'), ipaddress.ip_address('192.168.1.3')],
         [2001, 2002, 2003],
         [ipaddress.ip_address('192.168.1.1'), ipaddress.ip_address('192.168.1.2'), ipaddress.ip_address('192.168.1.3')],
-        wait_for_conductr=True
+        wait_for_conductr=True,
+        max_agents_exceeded_error=None
     )
     feature_results = [sandbox_features.BundleStartResult('bundle-a', 1001),
                        sandbox_features.BundleStartResult('bundle-b', 1002)]
@@ -1370,7 +1458,8 @@ class TestLogRunAttempt(CliTestCase):
             [ipaddress.ip_address('192.168.1.1')],
             [2001],
             [ipaddress.ip_address('192.168.1.1')],
-            wait_for_conductr=False
+            wait_for_conductr=False,
+            max_agents_exceeded_error=None
         )
 
         run_mock = MagicMock()
@@ -1466,6 +1555,69 @@ class TestLogRunAttempt(CliTestCase):
                                           |  conduct info
                                           |Current bundle status:
                                           |""")
+        self.assertEqual(expected_stdout, self.output(stdout))
+
+    def test_log_nr_agents_exceeded(self):
+        run_mock = MagicMock()
+        stdout = MagicMock()
+        input_args = MagicMock(**{
+            'bundle_http_port': 9000
+        })
+
+        run_result = sandbox_run_jvm.SandboxRunResult(
+            [1001, 1002, 1003],
+            [ipaddress.ip_address('192.168.1.1'), ipaddress.ip_address('192.168.1.2'), ipaddress.ip_address('192.168.1.3')],
+            [2001, 2002, 2003],
+            [ipaddress.ip_address('192.168.1.1'), ipaddress.ip_address('192.168.1.2'), ipaddress.ip_address('192.168.1.3')],
+            wait_for_conductr=True,
+            max_agents_exceeded_error=LicenseMaxAgentExceededError(['test error message 1', 'test error message 2'])
+        )
+
+        with patch('conductr_cli.conduct_main.run', run_mock):
+            logging_setup.configure_logging(input_args, stdout)
+            sandbox_run_jvm.log_run_attempt(
+                input_args,
+                run_result=run_result,
+                feature_results=self.feature_results,
+                feature_provided=[FEATURE_PROVIDE_PROXYING]
+            )
+
+        run_mock.assert_called_with(['info', '--host', '192.168.1.1'], configure_logging=False)
+
+        expected_stdout = as_warn(
+            strip_margin("""||------------------------------------------------|
+                            || Summary                                        |
+                            ||------------------------------------------------|
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            || ConductR                                       |
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            |ConductR has been started:
+                            |  core instances on 192.168.1.1, 192.168.1.2, 192.168.1.3
+                            |  agent instances on 192.168.1.1, 192.168.1.2, 192.168.1.3
+                            |ConductR service locator has been started on:
+                            |  192.168.1.1:9008
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            || Proxy                                          |
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            |HAProxy has been started
+                            |By default, your bundles are accessible on:
+                            |  192.168.1.1:9000
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            || Features                                       |
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            |The following feature related bundles have been started:
+                            |  bundle-a on 192.168.1.1:1001
+                            |  bundle-b on 192.168.1.1:1002
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            || Bundles                                        |
+                            ||- - - - - - - - - - - - - - - - - - - - - - - - |
+                            |Check latest bundle status with:
+                            |  conduct info
+                            |Current bundle status:
+                            |Warning: test error message 1
+                            |Warning: test error message 2
+                            |""")
+        )
         self.assertEqual(expected_stdout, self.output(stdout))
 
 

@@ -1,6 +1,6 @@
 from conductr_cli import license
 from conductr_cli.constants import DEFAULT_SCHEME, DEFAULT_PORT, DEFAULT_BASE_PATH, DEFAULT_API_VERSION
-from conductr_cli.exceptions import LicenseValidationError
+from conductr_cli.exceptions import LicenseMaxAgentExceededError, LicenseValidationError
 import os
 
 CONDUCTR_GRANT = 'conductr'
@@ -87,8 +87,8 @@ def validate_version(conductr_version, license_data):
 def validate_nr_of_agents(nr_of_agent_instances, license_data):
     nr_of_allowed_agents = get_value(license_data, 'maxConductrAgents')
     if nr_of_allowed_agents and nr_of_agent_instances > nr_of_allowed_agents:
-        raise LicenseValidationError([
-            'Unable to allocate {} agents'.format(nr_of_agent_instances),
+        raise LicenseMaxAgentExceededError([
+            '{} agents requested'.format(nr_of_agent_instances),
             'The license allows for {} agent(s)'.format(nr_of_allowed_agents)
         ])
 

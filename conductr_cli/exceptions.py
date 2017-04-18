@@ -208,6 +208,14 @@ class LicenseValidationError(Exception):
         return repr(os.linesep.join(self.messages))
 
 
+class LicenseMaxAgentExceededError(Exception):
+    def __init__(self, messages):
+        self.messages = messages
+
+    def __str(self):
+        return repr(os.linesep.join(self.messages))
+
+
 class LicenseDownloadError(Exception):
     def __init__(self, messages):
         self.messages = messages

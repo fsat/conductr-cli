@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import call, patch, MagicMock
 from conductr_cli import license_validation
 from conductr_cli.constants import DEFAULT_LICENSE_FILE
-from conductr_cli.exceptions import LicenseValidationError
+from conductr_cli.exceptions import LicenseMaxAgentExceededError, LicenseValidationError
 import ipaddress
 
 
@@ -200,7 +200,7 @@ class TestValidateNrOfAgents(TestCase):
         license_validation.validate_nr_of_agents(3, self.license)
 
     def test_more_then_allowed(self):
-        self.assertRaises(LicenseValidationError, license_validation.validate_nr_of_agents, 5, self.license)
+        self.assertRaises(LicenseMaxAgentExceededError, license_validation.validate_nr_of_agents, 5, self.license)
 
     def test_nr_of_agents_missing(self):
         license_no_agents = self.license.copy()
