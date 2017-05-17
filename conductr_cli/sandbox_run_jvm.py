@@ -650,6 +650,8 @@ def start_agent_instances(agent_extracted_dir, tmp_dir,
     args_features = flatten([f.conductr_args() for f in features])
     feature_envs = flatten([f.conductr_agent_envs() for f in features])
     process_envs = merge_with_os_envs(feature_envs, envs, envs_agent)
+    print('\n\nOS ENVS {}\n\n'.format(os.environ))
+    print('\n\nAGENT PROCESS ENVS {}\n\n'.format(process_envs))
 
     for idx, bind_addr in enumerate(bind_addrs):
         core_addr = core_addrs[idx] if len(core_addrs) > idx else core_addrs[0]
