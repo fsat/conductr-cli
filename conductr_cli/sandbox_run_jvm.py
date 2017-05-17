@@ -709,6 +709,10 @@ def merge_with_os_envs(*args):
                 value = env_split[-1]
                 result.update({key: value})
 
+        if 'LD_LIBRARY_PATH' in result:
+            print('Deleting LD_LIBRARY_PATH env {}'.format(result['LD_LIBRARY_PATH']))
+            del result['LD_LIBRARY_PATH']
+
         return result
     else:
         return None
