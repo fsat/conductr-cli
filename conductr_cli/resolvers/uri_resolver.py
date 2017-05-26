@@ -45,6 +45,8 @@ def resolve_file(cache_dir, uri, auth=None, require_bundle_conf=True, raise_erro
         if raise_error:
             raise e
         else:
+            import traceback
+            traceback.print_exc()
             return False, None, None
 
 
