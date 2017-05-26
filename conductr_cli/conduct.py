@@ -1,7 +1,7 @@
 from conductr_cli import main_handler
 import sys
 import os
-
+import certifi
 
 if getattr(sys, 'frozen', False):
     # Assume Python's cacert file is included as part of the packaged native executable.
@@ -19,7 +19,8 @@ if getattr(sys, 'frozen', False):
     # Some further info on how OSX OpenSSL cert validation:
     # https://hynek.me/articles/apple-openssl-verification-surprises/
     #
-    os.environ['SSL_CERT_FILE'] = os.path.join(sys._MEIPASS, 'lib', 'cert.pem')
+    # os.environ['SSL_CERT_FILE'] = os.path.join(sys._MEIPASS, 'lib', 'cert.pem')
+    os.environ['SSL_CERT_FILE'] = certifi.where()
 
 
 def main_method():
